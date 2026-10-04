@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#f4efe6" />
+    <meta
+      name="description"
+      content="基辅中文约拍服务，支持写真、街拍、情侣、毕业照、探店及商业摄影。在线快速计算拍摄价格。"
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="zh_CN" />
+    <meta property="og:title" content="基辅约拍｜摄影服务预订与价格计算器" />
+    <meta
+      property="og:description"
+      content="30 秒选好拍摄需求，立即获得基辅中文约拍参考价格。"
+    />
+    <title>基辅约拍｜摄影服务预订与价格计算器</title>
+    <link rel="stylesheet" href="styles.css" />
+    <script src="pricing.js" defer></script>
+    <script src="app.js" defer></script>
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="#top" aria-label="基辅约拍首页">
+        <span class="brand-mark" aria-hidden="true"></span>
+        <span>基辅约拍</span>
+      </a>
+      <a class="header-link" href="#booking-notes">预约须知</a>
+    </header>
+
+    <main id="top">
+      <section class="hero section-shell" aria-labelledby="hero-title">
+        <div class="hero-copy">
+          <p class="eyebrow">KYIV · 中文摄影服务</p>
+          <h1 id="hero-title">30 秒看看<br />这次拍摄多少钱？</h1>
+          <p class="hero-lede">选一下拍摄需求，马上获得参考价格。不会摆姿势也没关系，全程带着拍。</p>
+          <div class="hero-actions">
+            <button class="button button-primary" type="button" data-action="start">开始测算</button>
+            <span class="microcopy">无需登录 · 不用留联系方式</span>
+          </div>
+        </div>
+
+        <div class="camera-card" aria-label="Canon R8 与 Fujifilm X100V 双机位服务">
+          <div class="camera-card-top">
+            <span>KYIV</span>
+            <span>50.4501° N</span>
+          </div>
+          <div class="viewfinder" aria-hidden="true">
+            <span class="viewfinder-cross viewfinder-cross-x"></span>
+            <span class="viewfinder-cross viewfinder-cross-y"></span>
+            <span class="focus-point"></span>
+          </div>
+          <div class="camera-card-bottom">
+            <div>
+              <strong>R8 × X100V</strong>
+              <span>双机位随心拍</span>
+            </div>
+            <span class="free-stamp">免费</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="benefit-bar" aria-label="服务权益">
+        <div>双机位拍摄</div>
+        <div>底片全送</div>
+        <div>1 精修 + 8 基础调整</div>
+        <div>全程动作引导</div>
+      </section>
+
+      <section class="calculator-section section-shell" id="calculator" aria-labelledby="calculator-title">
+        <div class="section-intro">
+          <p class="eyebrow">PRICE QUIZ</p>
+          <h2 id="calculator-title">像做小测试一样，选出你的方案</h2>
+          <p>个人约拍即时计算；商业项目不套用个人价格，按需求单独报价。</p>
+        </div>
+
+        <div class="quiz-card" id="quizCard">
+          <div class="quiz-welcome" id="quizWelcome">
+            <div class="welcome-number">30<span>秒</span></div>
+            <div>
+              <h3>准备好了吗？</h3>
+              <p>一共 4–5 步，随时可以返回修改。</p>
+            </div>
+            <button class="button button-dark" type="button" data-action="start">开始选择</button>
+          </div>
+
+          <div class="quiz-flow" id="quizFlow" hidden>
+            <div class="progress-row">
+              <span id="stepLabel">Step 1 / 4</span>
+              <span id="stepSummary">选择拍摄类型</span>
+            </div>
+            <div
+              class="progress-track"
+              role="progressbar"
+              aria-label="报价测算进度"
+              aria-valuemin="1"
+              aria-valuemax="4"
+              aria-valuenow="1"
+            >
+              <span id="progressFill"></span>
+            </div>
+
+            <div class="question-wrap" id="questionWrap">
+              <p class="question-kicker" id="questionKicker">先从最重要的开始</p>
+              <h3 id="questionHeading">你想拍什么？</h3>
+              <p class="question-hint" id="questionHint">选择最接近的一项就好。</p>
+              <div class="option-grid" id="options" role="group" aria-labelledby="questionHeading"></div>
+              <div class="custom-control" id="customControl" hidden></div>
+            </div>
+
+            <div class="quiz-nav">
+              <button class="text-button" id="backButton" type="button">← 上一步</button>
+              <button class="button button-primary" id="continueButton" type="button" hidden>继续</button>
+            </div>
+          </div>
+
+          <article class="result-card" id="resultCard" aria-live="polite" hidden>
+            <div id="resultContent"></div>
+            <div class="result-actions">
+              <button class="button button-primary" id="copyButton" type="button">复制咨询方案</button>
+              <button class="button button-outline" id="editButton" type="button">修改方案</button>
+              <button class="text-button centered" id="resetButton" type="button">重新测算</button>
+            </div>
+            <label class="copy-preview-label" for="consultationText">咨询文字预览</label>
+            <textarea id="consultationText" class="copy-preview" readonly rows="9"></textarea>
+            <p class="copy-status" id="copyStatus" role="status" aria-live="polite"></p>
+          </article>
+        </div>
+      </section>
+
+      <section class="experience section-shell" aria-labelledby="experience-title">
+        <div class="experience-heading">
+          <p class="eyebrow">EASY SHOOTING</p>
+          <h2 id="experience-title">不会摆姿势？<br />没关系。</h2>
+        </div>
+        <div class="experience-grid">
+          <article>
+            <span class="feature-index">01</span>
+            <h3>全程带着拍</h3>
+            <p>从站位、动作到情绪表达都会给出清楚引导，第一次约拍也可以轻松进入状态。</p>
+          </article>
+          <article>
+            <span class="feature-index">02</span>
+            <h3>自然生活感</h3>
+            <p>适合写真、街拍、情侣、好友、毕业照与探店记录，保留真实又好看的氛围。</p>
+          </article>
+          <article>
+            <span class="feature-index">03</span>
+            <h3>基辅市区可约</h3>
+            <p>公交或地铁可到达的地点原则上均可约拍；路途较远时需报销交通费用。</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="deliverables section-shell" aria-labelledby="deliverables-title">
+        <div class="deliverables-card">
+          <div>
+            <p class="eyebrow light">WHAT YOU GET</p>
+            <h2 id="deliverables-title">一场拍摄，<br />刚好凑齐朋友圈九宫格。</h2>
+          </div>
+          <ul class="check-list">
+            <li>Canon R8 × Fujifilm X100V 双机位随心拍</li>
+            <li>拍摄底片全送，含部分空镜与简短视频花絮</li>
+            <li>含 1 张精修</li>
+            <li>另含 8 张基础调色 / 瑕疵调整</li>
+            <li>确认档期后，支付 50 RMB 定金锁定预约</li>
+          </ul>
+        </div>
+        <aside class="referral-note">
+          <span aria-hidden="true">＋1</span>
+          <p><strong>推荐朋友成功预约</strong><br />额外赠送精修 1 张，多推荐多送。</p>
+        </aside>
+      </section>
+
+      <section class="booking-notes section-shell" id="booking-notes" aria-labelledby="notes-title">
+        <div class="notes-heading">
+          <p class="eyebrow">BEFORE BOOKING</p>
+          <h2 id="notes-title">❗预约须知</h2>
+          <p>支付定金即默认同意以下内容，请在预约前完整阅读。</p>
+        </div>
+        <ol class="notes-list">
+          <li>预约需支付定金 50 RMB。若临时有事，可提前 24 小时改时间；未提前告知则定金作废。中途跑单定金不退，拍摄结束后分开前需结清尾款。</li>
+          <li>拍摄前请提前沟通好时间、地点、时长和拍摄风格。</li>
+          <li>拍摄过程中产生的个人费用需自理；若路途较远，需报销交通费。</li>
+          <li>拍摄过程中有任何不满意，可以直接提出，及时沟通调整才能拍得更满意。</li>
+          <li>拍摄时长超过 1 小时但不足 2 小时，按 2 小时计算。迟到超过 10 分钟后，迟到时间计入拍摄时长。</li>
+          <li>天气不好可协商改期，下雨不拍。因客人个人原因取消，定金不退。</li>
+          <li>如因天黑或其他不可抗力因素中途停止拍摄，费用按实际拍摄时长计算。</li>
+          <li>照片通过网盘传输，收到链接后请尽快保存到自己的网盘。</li>
+          <li>价格已经很友好，不接受讲价。只和有礼貌、好沟通的朋友合作。</li>
+          <li>支付定金即默认同意以上预约须知。</li>
+        </ol>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <strong>基辅约拍</strong>
+        <span>乌克兰 · 基辅</span>
+      </div>
+      <p>以上为参考价格，最终以实际拍摄需求沟通为准。</p>
+    </footer>
+  </body>
+</html>
