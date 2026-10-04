@@ -35,16 +35,20 @@
     const indoorDuration = scene === "mixed" ? normalizePositiveNumber(input.indoorDuration, 1) : 0;
     const outdoorDuration = scene === "mixed" ? normalizePositiveNumber(input.outdoorDuration, 1) : 0;
     const duration = scene === "mixed" ? indoorDuration + outdoorDuration : normalizePositiveNumber(input.duration, 1);
-    const indoorBillableHours = scene === "mixed" ? getBillableHours(indoorDuration) : 0;
-    const outdoorBillableHours = scene === "mixed" ? getBillableHours(outdoorDuration) : 0;
-    const billableHours = scene === "mixed" ? indoorBillableHours + outdoorBillableHours : getBillableHours(duration);
+    const indoorBillableHours = scene === "mixed" ? indoorDuration : 0;
+    const outdoorBillableHours = scene === "mixed" ? outdoorDuration : 0;
+    const billableHours = getBillableHours(duration);
     const baseRate = scene === "indoor" ? PRICING.indoorBase : PRICING.outdoorBase;
     const extraPersonRate =
       scene === "indoor" ? PRICING.indoorExtraPerson : PRICING.outdoorExtraPerson;
     const hourlyRate = baseRate + extraPersonRate * (people - 1);
     const indoorHourlyRate = PRICING.indoorBase + PRICING.indoorExtraPerson * (people - 1);
     const outdoorHourlyRate = PRICING.outdoorBase + PRICING.outdoorExtraPerson * (people - 1);
-    const oneHourFee = scene !== "mixed" && duration === 1 ? PRICING.oneHourSurcharge : 0;
+    const mixedHourlyRate = (indoorHourlyRate + outdoorHourlyRate) / 2;
+    const mixedFractionHours = scene === "mixed"
+      ? (indoorDuration % 1) + (outdoorDuration % 1)
+      : 0;
+    const oneHourFee = duration === 1 ? PRICING.oneHourSurcharge : 0;
     const graduation = Boolean(input.graduation);
     const gowns = graduation && input.gownSelections ? input.gownSelections : null;
     const newGownCount = gowns
@@ -61,7 +65,10 @@
     const gownCount = gowns ? newGownCount : legacyGownCount;
     const gownFee = gownCount * PRICING.gownCleaning;
     const shootingFee = scene === "mixed"
-      ? indoorHourlyRate * indoorBillableHours + outdoorHourlyRate * outdoorBillableHours
+      ? indoorHourlyRate * Math.floor(indoorDuration)
+        + outdoorHourlyRate * Math.floor(outdoorDuration)
+        + mixedHourlyRate * mixedFractionHours
+        + oneHourFee
       : hourlyRate * billableHours + oneHourFee;
 
     return {
@@ -76,6 +83,8 @@
       hourlyRate,
       indoorHourlyRate,
       outdoorHourlyRate,
+      mixedHourlyRate,
+      mixedFractionHours,
       oneHourFee,
       gownCount,
       gownFee,

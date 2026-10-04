@@ -62,7 +62,9 @@
       steps.push("commercialType");
       return steps;
     }
-    steps.push("scene", "people", "duration");
+    steps.push("scene", "people");
+    if (state.selections.peopleMode === "large") return steps;
+    steps.push("duration");
     if (state.selections.type === "graduation") steps.push("gown");
     return steps;
   }
@@ -102,7 +104,10 @@
         value: String(number),
         label: `${number} 人`,
         meta: number === 1 ? "单人约拍" : "一起出镜",
-      })).concat([{ value: "more", label: "更多", meta: "输入具体人数" }]),
+      })).concat([
+        { value: "more", label: "5–10 人", meta: "输入具体人数" },
+        { value: "large", label: "10 人以上", meta: "按拍摄需求单独报价" },
+      ]),
     },
     duration: {
       kicker: "1 小时加收 15 RMB",
@@ -141,7 +146,9 @@
 
   function getSelectedValue(step) {
     if (step === "people") {
-      return state.selections.peopleMode === "more" ? "more" : String(state.selections.people || "");
+      if (state.selections.peopleMode === "more") return "more";
+      if (state.selections.peopleMode === "large") return "large";
+      return String(state.selections.people || "");
     }
     if (step === "duration") {
       return state.selections.durationMode === "custom"
@@ -170,6 +177,7 @@
     elements.custom.hidden = true;
     elements.custom.innerHTML = "";
     elements.continue.hidden = true;
+    elements.continue.disabled = false;
     elements.back.style.visibility = state.stepIndex === 0 ? "hidden" : "visible";
 
     const selectedValue = getSelectedValue(step);
@@ -227,6 +235,11 @@
     }
     if (step === "people") {
       state.selections.peopleMode = option.value;
+      if (option.value === "large") {
+        state.selections.people = 11;
+        advanceSoon();
+        return;
+      }
       if (option.value === "more") {
         state.selections.people = Math.max(5, Number(state.selections.people) || 5);
         renderPeopleControl();
@@ -267,13 +280,13 @@
       <label for="peopleInput">具体人数</label>
       <div class="stepper">
         <button type="button" aria-label="减少人数" data-stepper="minus">−</button>
-        <input id="peopleInput" type="number" min="5" max="30" inputmode="numeric" value="${state.selections.people}" />
+        <input id="peopleInput" type="number" min="5" max="10" inputmode="numeric" value="${state.selections.people}" />
         <button type="button" aria-label="增加人数" data-stepper="plus">＋</button>
       </div>
-      <p>5 人以上建议先复制方案咨询，最终以场地与拍摄安排为准。</p>
+      <p>个人即时报价最多 10 人；10 人以上请返回选择“10 人以上”咨询。</p>
     `;
     const input = elements.custom.querySelector("input");
-    bindStepper(input, 5, 30, 1, (value) => {
+    bindStepper(input, 5, 10, 1, (value) => {
       state.selections.people = value;
     });
     elements.continue.hidden = false;
@@ -304,51 +317,57 @@
     elements.options.innerHTML = "";
     const indoor = Number(state.selections.indoorDuration) || 1;
     const outdoor = Number(state.selections.outdoorDuration) || 1;
+    const people = Number(state.selections.people) || 1;
+    const indoorRate = PRICING.indoorBase + PRICING.indoorExtraPerson * (people - 1);
+    const outdoorRate = PRICING.outdoorBase + PRICING.outdoorExtraPerson * (people - 1);
+    const averageRate = (indoorRate + outdoorRate) / 2;
     elements.custom.hidden = false;
     elements.custom.innerHTML = `
       <div class="mixed-duration-grid">
-        <label>室内拍摄时长
-          <input class="duration-input" data-mixed-duration="indoor" type="number" min="1" max="11" step="0.5" inputmode="decimal" value="${indoor}" />
-        </label>
-        <label>室外拍摄时长
-          <input class="duration-input" data-mixed-duration="outdoor" type="number" min="1" max="11" step="0.5" inputmode="decimal" value="${outdoor}" />
-        </label>
+        <div class="gown-row">
+          <div><strong>室内拍摄</strong><span>每次调整 0.5 小时</span></div>
+          <div class="stepper compact" data-duration-stepper="indoor">
+            <button type="button" aria-label="减少室内拍摄时长" data-direction="minus">−</button>
+            <input data-mixed-duration="indoor" type="text" inputmode="none" value="${formatHours(indoor)} 小时" readonly aria-label="室内拍摄时长" />
+            <button type="button" aria-label="增加室内拍摄时长" data-direction="plus">＋</button>
+          </div>
+        </div>
+        <div class="gown-row">
+          <div><strong>室外拍摄</strong><span>每次调整 0.5 小时</span></div>
+          <div class="stepper compact" data-duration-stepper="outdoor">
+            <button type="button" aria-label="减少室外拍摄时长" data-direction="minus">−</button>
+            <input data-mixed-duration="outdoor" type="text" inputmode="none" value="${formatHours(outdoor)} 小时" readonly aria-label="室外拍摄时长" />
+            <button type="button" aria-label="增加室外拍摄时长" data-direction="plus">＋</button>
+          </div>
+        </div>
       </div>
-      <p id="durationRule">室内与室外分别按对应价格计算，总时长最多 12 小时。</p>
+      <p id="durationRule"></p>
     `;
-    const update = () => {
-      const indoorInput = elements.custom.querySelector("[data-mixed-duration='indoor']");
-      const outdoorInput = elements.custom.querySelector("[data-mixed-duration='outdoor']");
-      const rule = document.getElementById("durationRule");
-      if (indoorInput.value === "" || outdoorInput.value === "") {
-        elements.continue.disabled = true;
-        rule.textContent = "请分别填写室内和室外拍摄时长。";
-        return;
-      }
-      const indoorValue = Number(indoorInput.value);
-      const outdoorValue = Number(outdoorInput.value);
-      if (indoorValue < 1 || outdoorValue < 1 || indoorValue > 11 || outdoorValue > 11) {
-        elements.continue.disabled = true;
-        rule.textContent = "每段拍摄时长需填写 1–11 小时。";
-        return;
-      }
-      if (indoorValue + outdoorValue > 12) {
-        elements.continue.disabled = true;
-        rule.textContent = "室内与室外合计不能超过 12 小时。";
-        return;
-      }
+    const update = (changedKey, delta) => {
+      let indoorValue = Number(state.selections.indoorDuration) || indoor;
+      let outdoorValue = Number(state.selections.outdoorDuration) || outdoor;
+      if (changedKey === "indoor") indoorValue = Math.max(0.5, Math.min(11.5, indoorValue + delta, 12 - outdoorValue));
+      if (changedKey === "outdoor") outdoorValue = Math.max(0.5, Math.min(11.5, outdoorValue + delta, 12 - indoorValue));
       state.selections.indoorDuration = indoorValue;
       state.selections.outdoorDuration = outdoorValue;
-      elements.continue.disabled = false;
-      rule.textContent =
-        `合计 ${formatHours(indoorValue + outdoorValue)} 小时；单段超过 1 小时但不足 2 小时，按 2 小时计费。`;
+      elements.custom.querySelector("[data-mixed-duration='indoor']").value = `${formatHours(indoorValue)} 小时`;
+      elements.custom.querySelector("[data-mixed-duration='outdoor']").value = `${formatHours(outdoorValue)} 小时`;
+      const total = indoorValue + outdoorValue;
+      const isWholeHour = Number.isInteger(total);
+      elements.continue.disabled = !isWholeHour;
+      document.getElementById("durationRule").textContent = isWholeHour
+        ? `合计 ${formatHours(total)} 小时；整小时分别计价，0.5＋0.5 部分按均价 ${averageRate} RMB / 小时`
+        : `当前合计 ${formatHours(total)} 小时；请再调整 0.5 小时，使总时长为整小时。`;
     };
-    elements.custom.querySelectorAll("[data-mixed-duration]").forEach((input) => input.addEventListener("input", update));
-    update();
+    elements.custom.querySelectorAll("[data-duration-stepper]").forEach((stepper) => {
+      const key = stepper.dataset.durationStepper;
+      stepper.querySelector("[data-direction='minus']").addEventListener("click", () => update(key, -0.5));
+      stepper.querySelector("[data-direction='plus']").addEventListener("click", () => update(key, 0.5));
+    });
+    update(null, 0);
     elements.continue.hidden = false;
     elements.continue.textContent = "生成报价";
     elements.continue.onclick = () => {
-      update();
       if (!elements.continue.disabled) advanceSoon();
     };
   }
@@ -477,6 +496,9 @@
     if (state.selections.type === "commercial") {
       state.resultMode = "commercial";
       renderCommercialResult();
+    } else if (state.selections.peopleMode === "large") {
+      state.resultMode = "large-group";
+      renderLargeGroupResult();
     } else {
       state.resultMode = "personal";
       renderPersonalResult();
@@ -566,6 +588,30 @@
       </ul>
     `;
     elements.consultation.value = createCommercialConsultation(state.selections);
+  }
+
+  function renderLargeGroupResult() {
+    const sceneLabels = { indoor: "室内", outdoor: "室外", mixed: "室内＋室外" };
+    elements.resultContent.innerHTML = `
+      <p class="result-eyebrow">你的拍摄方案</p>
+      <div class="result-title-row">
+        <div>
+          <h3>10 人以上多人拍摄</h3>
+          <p>${state.selections.typeLabel} · ${sceneLabels[state.selections.scene] || "场景待定"}</p>
+        </div>
+        <span class="result-badge dark">定制报价</span>
+      </div>
+      <div class="commercial-message">
+        <strong>多人拍摄 · 需要具体咨询</strong>
+        <p>请提供具体人数、日期、地点、预计时长和拍摄安排，我们会根据现场组织与交付需求单独报价。</p>
+      </div>
+    `;
+    elements.consultation.value = [
+      "【基辅多人拍摄咨询】", "", `拍摄类型：${state.selections.typeLabel}`,
+      `场景：${sceneLabels[state.selections.scene] || "待沟通"}`, "人数：10 人以上",
+      "具体人数：待填写", "日期：待填写", "地点：待填写", "预计时长：待填写", "",
+      "我想咨询一下多人拍摄的报价和档期。",
+    ].join("\n");
   }
 
   function goBack() {

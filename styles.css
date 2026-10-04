@@ -1,17 +1,17 @@
 :root {
-  --paper: #e8e0d2;
-  --paper-strong: #d9cebd;
-  --surface: #f7f1e7;
-  --ink: #20231f;
-  --muted: #68675f;
-  --line: rgba(32, 35, 31, 0.2);
-  --accent: #c34e34;
-  --accent-dark: #96351f;
-  --forest: #26372f;
-  --forest-light: #415446;
-  --mustard: #d2a33a;
-  --green: #596a58;
-  --shadow: 12px 14px 0 rgba(32, 35, 31, 0.12);
+  --paper: #f5e9bb;
+  --paper-strong: #e9d99e;
+  --surface: #fffaf0;
+  --ink: #26364d;
+  --muted: #68768a;
+  --line: rgba(38, 54, 77, 0.2);
+  --accent: #a9cee7;
+  --accent-dark: #5c83a2;
+  --forest: #4f7899;
+  --forest-light: #9fc5df;
+  --mustard: #e4c766;
+  --green: #7da5c4;
+  --shadow: 12px 14px 0 rgba(56, 78, 105, 0.14);
   --radius-lg: 28px;
   --radius-md: 18px;
   --radius-sm: 12px;
@@ -170,7 +170,7 @@ button {
 }
 
 .eyebrow.light {
-  color: #f4c6b9;
+  color: #d9ecf8;
 }
 
 .hero h1,
@@ -224,9 +224,9 @@ button {
 }
 
 .button-primary {
-  color: #fff;
+  color: var(--ink);
   background: var(--accent);
-  box-shadow: 0 10px 24px rgba(217, 95, 66, 0.25);
+  box-shadow: 0 10px 24px rgba(76, 118, 153, 0.24);
 }
 
 .button-primary:hover {
@@ -264,12 +264,12 @@ button {
   min-height: 460px;
   justify-self: center;
   overflow: hidden;
-  border: 10px solid #151a16;
+  border: 10px solid #26364d;
   border-radius: 4px;
   color: #fff;
   background:
-    radial-gradient(circle at 70% 20%, rgba(235, 196, 128, 0.48), transparent 26%),
-    linear-gradient(145deg, #222c27 0 42%, #697762 42% 66%, #ad4937 66% 100%);
+    radial-gradient(circle at 70% 20%, rgba(255, 246, 199, 0.7), transparent 26%),
+    linear-gradient(145deg, #365a78 0 42%, #9fc5df 42% 66%, #e6cf78 66% 100%);
   box-shadow: var(--shadow);
   transform: rotate(1.2deg);
 }
@@ -290,7 +290,7 @@ button {
   bottom: 5px;
   left: 0;
   height: 8px;
-  background: repeating-linear-gradient(90deg, #d9cebd 0 11px, transparent 11px 22px);
+  background: repeating-linear-gradient(90deg, #f5e9bb 0 11px, transparent 11px 22px);
   content: "";
   opacity: 0.72;
 }
@@ -418,7 +418,7 @@ button {
   grid-template-columns: repeat(2, 1fr);
   border-block: 1px solid rgba(242, 234, 220, 0.16);
   color: #f2eadc;
-  background: #171c18;
+  background: #26364d;
 }
 
 .benefit-bar div {
@@ -769,7 +769,7 @@ button {
 .chip.is-selected {
   border-color: var(--accent);
   color: var(--accent-dark);
-  background: #fff5f1;
+  background: #eef7fc;
 }
 
 .quiz-nav {
@@ -846,7 +846,7 @@ button {
   padding: 7px 10px;
   border-radius: 2px;
   color: var(--accent-dark);
-  background: #fbe2da;
+  background: #dceef8;
   font-size: 11px;
   font-weight: 800;
 }
@@ -860,8 +860,8 @@ button {
   margin: 14px 0 0;
   padding: 10px 12px;
   border-radius: 10px;
-  color: #62501e;
-  background: #fff1bf;
+  color: #5f5526;
+  background: #fff4c9;
   font-size: 12px;
 }
 
@@ -903,7 +903,7 @@ button {
   padding: 6px 16px;
   border: 1px solid var(--line);
   border-radius: 2px;
-  background: #eee6d8;
+  background: #f7efd3;
 }
 
 .summary-row {
@@ -944,7 +944,7 @@ button {
   padding: 16px;
   border-left: 4px solid var(--mustard);
   border-radius: 0;
-  background: #dce1d7;
+  background: #e7f2f8;
   font-size: 13px;
 }
 
@@ -1034,11 +1034,11 @@ button {
 }
 
 .experience-grid article:nth-child(2) {
-  background: #dbe0d5;
+  background: #e7f2f8;
 }
 
 .experience-grid article:nth-child(3) {
-  background: #e5d2c7;
+  background: #f7edc8;
 }
 
 .feature-index {
@@ -1071,7 +1071,7 @@ button {
   border-radius: 3px;
   color: #fff;
   background:
-    linear-gradient(120deg, transparent 0 68%, rgba(195, 78, 52, 0.7) 68% 100%),
+    linear-gradient(120deg, transparent 0 68%, rgba(228, 199, 102, 0.72) 68% 100%),
     var(--forest);
 }
 
@@ -1094,7 +1094,7 @@ button {
 }
 
 .check-list li::before {
-  color: #f4c6b9;
+  color: #d9ecf8;
 }
 
 .referral-note {
@@ -1155,7 +1155,7 @@ button {
   place-items: center;
   border-radius: 2px;
   color: var(--accent-dark);
-  background: #fbe2da;
+  background: #dceef8;
   font-family: Georgia, serif;
   font-weight: 800;
   content: counter(notes, decimal-leading-zero);
