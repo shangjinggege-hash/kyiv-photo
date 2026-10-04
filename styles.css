@@ -1,14 +1,17 @@
 :root {
-  --paper: #f4efe6;
-  --paper-strong: #ebe2d3;
-  --surface: #fffdf9;
-  --ink: #1e1e1b;
-  --muted: #6b6962;
-  --line: rgba(30, 30, 27, 0.14);
-  --accent: #d95f42;
-  --accent-dark: #b94129;
-  --green: #68745a;
-  --shadow: 0 22px 60px rgba(55, 42, 27, 0.1);
+  --paper: #e8e0d2;
+  --paper-strong: #d9cebd;
+  --surface: #f7f1e7;
+  --ink: #20231f;
+  --muted: #68675f;
+  --line: rgba(32, 35, 31, 0.2);
+  --accent: #c34e34;
+  --accent-dark: #96351f;
+  --forest: #26372f;
+  --forest-light: #415446;
+  --mustard: #d2a33a;
+  --green: #596a58;
+  --shadow: 12px 14px 0 rgba(32, 35, 31, 0.12);
   --radius-lg: 28px;
   --radius-md: 18px;
   --radius-sm: 12px;
@@ -31,6 +34,20 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
   line-height: 1.65;
   text-rendering: optimizeLegibility;
+}
+
+body::after {
+  position: fixed;
+  z-index: 100;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.16;
+  background-image:
+    radial-gradient(circle at 18% 20%, rgba(255, 255, 255, 0.36) 0 0.6px, transparent 0.8px),
+    radial-gradient(circle at 72% 68%, rgba(0, 0, 0, 0.32) 0 0.5px, transparent 0.8px);
+  background-size: 7px 7px, 9px 9px;
+  content: "";
+  mix-blend-mode: soft-light;
 }
 
 button,
@@ -67,13 +84,14 @@ button {
   min-height: 72px;
   margin-inline: auto;
   padding-top: env(safe-area-inset-top);
+  color: #f2eadc;
 }
 
 .brand {
   display: inline-flex;
   gap: 10px;
   align-items: center;
-  color: var(--ink);
+  color: #f2eadc;
   font-weight: 800;
   text-decoration: none;
   letter-spacing: 0.02em;
@@ -83,7 +101,7 @@ button {
   position: relative;
   width: 20px;
   height: 20px;
-  border: 2px solid var(--ink);
+  border: 2px solid #f2eadc;
   border-radius: 50%;
 }
 
@@ -98,17 +116,49 @@ button {
 .header-link {
   min-height: 44px;
   padding: 10px 0 10px 16px;
-  color: var(--muted);
+  color: rgba(242, 234, 220, 0.72);
   font-size: 14px;
   font-weight: 700;
   text-decoration: none;
 }
 
 .hero {
+  position: relative;
+  z-index: 1;
   display: grid;
   gap: 36px;
   align-items: center;
   padding-block: 48px 64px;
+}
+
+.hero::before {
+  position: absolute;
+  z-index: -1;
+  top: -88px;
+  bottom: 0;
+  left: 50%;
+  width: 100vw;
+  background:
+    linear-gradient(110deg, rgba(210, 163, 58, 0.07), transparent 36%),
+    var(--forest);
+  content: "";
+  transform: translateX(-50%);
+}
+
+.film-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  margin-bottom: 28px;
+  color: rgba(242, 234, 220, 0.6);
+  font-family: "Courier New", monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+}
+
+.film-meta span:first-child {
+  color: var(--mustard);
 }
 
 .eyebrow {
@@ -138,12 +188,14 @@ button {
 .hero h1 {
   max-width: 720px;
   font-size: clamp(44px, 13vw, 84px);
+  color: #f4ecdf;
+  text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.13);
 }
 
 .hero-lede {
   max-width: 580px;
   margin: 24px 0 0;
-  color: var(--muted);
+  color: rgba(242, 234, 220, 0.7);
   font-size: 17px;
 }
 
@@ -193,8 +245,17 @@ button {
 }
 
 .microcopy {
-  color: var(--muted);
+  color: rgba(242, 234, 220, 0.58);
   font-size: 12px;
+}
+
+.film-note {
+  margin: 28px 0 0;
+  color: rgba(242, 234, 220, 0.42);
+  font-family: "Courier New", monospace;
+  font-size: 10px;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
 }
 
 .camera-card {
@@ -203,20 +264,47 @@ button {
   min-height: 460px;
   justify-self: center;
   overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.7);
-  border-radius: 34px;
+  border: 10px solid #151a16;
+  border-radius: 4px;
   color: #fff;
   background:
-    radial-gradient(circle at 70% 20%, rgba(255, 220, 168, 0.55), transparent 25%),
-    linear-gradient(145deg, #38423b 0 42%, #809078 42% 66%, #d86546 66% 100%);
+    radial-gradient(circle at 70% 20%, rgba(235, 196, 128, 0.48), transparent 26%),
+    linear-gradient(145deg, #222c27 0 42%, #697762 42% 66%, #ad4937 66% 100%);
   box-shadow: var(--shadow);
+  transform: rotate(1.2deg);
 }
 
 .camera-card::before {
   position: absolute;
   inset: 0;
-  background: linear-gradient(110deg, rgba(255, 255, 255, 0.12), transparent 46%);
+  background:
+    linear-gradient(110deg, rgba(255, 242, 214, 0.16), transparent 46%),
+    linear-gradient(0deg, rgba(52, 41, 28, 0.08), rgba(52, 41, 28, 0.08));
   content: "";
+}
+
+.camera-card::after {
+  position: absolute;
+  z-index: 3;
+  right: 0;
+  bottom: 5px;
+  left: 0;
+  height: 8px;
+  background: repeating-linear-gradient(90deg, #d9cebd 0 11px, transparent 11px 22px);
+  content: "";
+  opacity: 0.72;
+}
+
+.film-frame-number {
+  position: absolute;
+  z-index: 4;
+  top: 50%;
+  right: 9px;
+  color: rgba(255, 255, 255, 0.48);
+  font-family: "Courier New", monospace;
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  transform: rotate(90deg) translateY(-50%);
 }
 
 .camera-card-top,
@@ -328,8 +416,9 @@ button {
 .benefit-bar {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  border-block: 1px solid var(--line);
-  background: rgba(255, 253, 249, 0.48);
+  border-block: 1px solid rgba(242, 234, 220, 0.16);
+  color: #f2eadc;
+  background: #171c18;
 }
 
 .benefit-bar div {
@@ -337,11 +426,19 @@ button {
   min-height: 70px;
   place-items: center;
   padding: 12px;
-  border-right: 1px solid var(--line);
-  border-bottom: 1px solid var(--line);
+  border-right: 1px solid rgba(242, 234, 220, 0.12);
+  border-bottom: 1px solid rgba(242, 234, 220, 0.12);
   font-size: 12px;
   font-weight: 800;
+  letter-spacing: 0.04em;
   text-align: center;
+}
+
+.benefit-bar div::before {
+  margin-right: 6px;
+  color: var(--mustard);
+  content: "●";
+  font-size: 7px;
 }
 
 .calculator-section {
@@ -352,6 +449,18 @@ button {
 .section-intro {
   max-width: 680px;
   margin-bottom: 32px;
+}
+
+.scene-label {
+  display: inline-block;
+  margin-bottom: 16px;
+  padding: 4px 8px;
+  border: 1px solid currentColor;
+  color: var(--forest);
+  font-family: "Courier New", monospace;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.09em;
 }
 
 .section-intro h2,
@@ -369,10 +478,24 @@ button {
 .quiz-card {
   min-height: 480px;
   overflow: hidden;
-  border: 1px solid rgba(30, 30, 27, 0.08);
-  border-radius: var(--radius-lg);
+  position: relative;
+  border: 2px solid var(--ink);
+  border-radius: 3px;
   background: var(--surface);
   box-shadow: var(--shadow);
+}
+
+.quiz-card::before {
+  position: absolute;
+  z-index: 2;
+  top: -12px;
+  right: 28px;
+  width: 76px;
+  height: 26px;
+  background: rgba(211, 188, 145, 0.72);
+  content: "";
+  transform: rotate(2deg);
+  box-shadow: 0 1px 4px rgba(35, 29, 22, 0.14);
 }
 
 .quiz-welcome {
@@ -436,7 +559,7 @@ button {
   width: 25%;
   height: 100%;
   border-radius: inherit;
-  background: var(--accent);
+  background: linear-gradient(90deg, var(--accent), var(--mustard));
   transition: width 220ms ease;
 }
 
@@ -478,7 +601,7 @@ button {
   justify-content: center;
   padding: 15px 18px;
   border: 1px solid var(--line);
-  border-radius: var(--radius-sm);
+  border-radius: 2px;
   color: var(--ink);
   background: #fff;
   text-align: left;
@@ -487,8 +610,14 @@ button {
 
 .option-card:hover,
 .option-card.is-selected {
-  border-color: var(--accent);
-  background: #fff5f1;
+  border-color: var(--forest);
+  color: #f5ede0;
+  background: var(--forest);
+}
+
+.option-card.is-selected span,
+.option-card:hover span {
+  color: rgba(245, 237, 224, 0.65);
 }
 
 .option-card:active {
@@ -615,7 +744,20 @@ button {
 }
 
 .result-card {
+  position: relative;
   padding: 28px 24px 32px;
+}
+
+.result-card::before {
+  display: block;
+  margin-bottom: 18px;
+  padding-bottom: 8px;
+  border-bottom: 1px dashed var(--line);
+  color: var(--muted);
+  font-family: "Courier New", monospace;
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  content: "KYIV / FRAME 01 / CONTACT SHEET";
 }
 
 .result-eyebrow {
@@ -651,7 +793,7 @@ button {
 .result-badge {
   flex: 0 0 auto;
   padding: 7px 10px;
-  border-radius: 999px;
+  border-radius: 2px;
   color: var(--accent-dark);
   background: #fbe2da;
   font-size: 11px;
@@ -674,7 +816,8 @@ button {
 
 .price-block {
   padding-block: 28px 22px;
-  text-align: center;
+  position: relative;
+  text-align: left;
 }
 
 .price-block > span {
@@ -690,6 +833,7 @@ button {
   font-family: Georgia, serif;
   font-size: clamp(60px, 18vw, 88px);
   line-height: 1.1;
+  letter-spacing: -0.04em;
 }
 
 .price-block small {
@@ -706,8 +850,9 @@ button {
 
 .price-summary {
   padding: 6px 16px;
-  border-radius: 12px;
-  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  background: #eee6d8;
 }
 
 .summary-row {
@@ -746,8 +891,9 @@ button {
 .deposit-callout,
 .commercial-message {
   padding: 16px;
-  border-radius: 12px;
-  background: #edf0e9;
+  border-left: 4px solid var(--mustard);
+  border-radius: 0;
+  background: #dce1d7;
   font-size: 13px;
 }
 
@@ -802,7 +948,20 @@ button {
 }
 
 .experience {
+  position: relative;
   padding-block: 72px 96px;
+}
+
+.experience::before {
+  position: absolute;
+  z-index: -1;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 100vw;
+  background: rgba(38, 55, 47, 0.06);
+  content: "";
+  transform: translateX(-50%);
 }
 
 .experience-heading {
@@ -814,13 +973,21 @@ button {
   gap: 1px;
   overflow: hidden;
   border: 1px solid var(--line);
-  border-radius: var(--radius-lg);
+  border-radius: 2px;
   background: var(--line);
 }
 
 .experience-grid article {
   padding: 28px 24px;
   background: var(--surface);
+}
+
+.experience-grid article:nth-child(2) {
+  background: #dbe0d5;
+}
+
+.experience-grid article:nth-child(3) {
+  background: #e5d2c7;
 }
 
 .feature-index {
@@ -848,9 +1015,24 @@ button {
   display: grid;
   gap: 36px;
   padding: 36px 24px;
-  border-radius: var(--radius-lg);
+  position: relative;
+  overflow: hidden;
+  border-radius: 3px;
   color: #fff;
-  background: var(--ink);
+  background:
+    linear-gradient(120deg, transparent 0 68%, rgba(195, 78, 52, 0.7) 68% 100%),
+    var(--forest);
+}
+
+.deliverables-card::after {
+  position: absolute;
+  right: 24px;
+  bottom: 14px;
+  color: rgba(255, 255, 255, 0.28);
+  font-family: "Courier New", monospace;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  content: "KAP—02 / DEVELOPED IN KYIV";
 }
 
 .check-list {
@@ -920,7 +1102,7 @@ button {
   width: 34px;
   height: 34px;
   place-items: center;
-  border-radius: 50%;
+  border-radius: 2px;
   color: var(--accent-dark);
   background: #fbe2da;
   font-family: Georgia, serif;
@@ -1011,6 +1193,10 @@ button {
 
   .camera-card {
     min-height: 540px;
+  }
+
+  .film-note {
+    margin-top: 44px;
   }
 
   .calculator-section {
