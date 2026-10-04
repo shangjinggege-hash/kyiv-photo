@@ -15,7 +15,7 @@
     oneHourSurcharge: 15,
     gownCleaning: 15,
     deposit: 50,
-    gownInventory: Object.freeze({ masterTotal: 6, doctor: 2, yellow: 2, silver: 2, pink: 4 }),
+    gownInventory: Object.freeze({ master: 6, doctor: 2, yellow: 2, silver: 2, pink: 4 }),
   });
 
   function normalizePositiveNumber(value, fallback) {
@@ -47,14 +47,12 @@
     const oneHourFee = scene !== "mixed" && duration === 1 ? PRICING.oneHourSurcharge : 0;
     const graduation = Boolean(input.graduation);
     const gowns = graduation && input.gownSelections ? input.gownSelections : null;
-    const requestedMaster = gowns
-      ? ["yellow", "silver", "pink"].reduce(
-        (sum, color) => sum + Math.min(PRICING.gownInventory[color], Math.max(0, Math.floor(Number(gowns[color]) || 0))),
-        0,
-      )
-      : 0;
     const newGownCount = gowns
-      ? Math.min(people, Math.min(PRICING.gownInventory.masterTotal, requestedMaster) + Math.min(PRICING.gownInventory.doctor, Math.max(0, Math.floor(Number(gowns.doctor) || 0))))
+      ? Math.min(
+        people,
+        Math.min(PRICING.gownInventory.master, Math.max(0, Math.floor(Number(gowns.master) || 0)))
+          + Math.min(PRICING.gownInventory.doctor, Math.max(0, Math.floor(Number(gowns.doctor) || 0))),
+      )
       : 0;
     const hasLegacyGown = graduation && input.gownType && input.gownType !== "none";
     const legacyGownCount = hasLegacyGown
@@ -106,10 +104,14 @@
     if (selection.type === "graduation") {
       if (selection.gownSelections) {
         const gowns = selection.gownSelections;
-        const details = [["黄色领硕士服", gowns.yellow], ["银色领硕士服", gowns.silver], ["粉色领硕士服", gowns.pink], ["红色博士服", gowns.doctor]]
+        const details = [["蓝色硕士服", gowns.master], ["红色博士服", gowns.doctor]]
           .filter(([, count]) => Number(count) > 0)
           .map(([label, count]) => `${label} × ${count}套`);
         lines.push(`毕业服：${details.length ? details.join("、") : "不需要"}`);
+        const collars = [["黄色领", gowns.yellow], ["银色领", gowns.silver], ["粉色领", gowns.pink]]
+          .filter(([, count]) => Number(count) > 0)
+          .map(([label, count]) => `${label} × ${count}条`);
+        if (collars.length) lines.push(`领子：${collars.join("、")}`);
       } else {
         const gownLabels = { none: "不需要", master: "硕士服", doctor: "博士服" };
         const gownLabel = gownLabels[selection.gownType] || "不需要";

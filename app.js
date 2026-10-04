@@ -354,45 +354,61 @@
   function renderGownControl() {
     const people = Number(state.selections.people) || 1;
     const inventory = PRICING.gownInventory;
-    const gowns = state.selections.gownSelections || { yellow: 0, silver: 0, pink: 0, doctor: 0 };
+    const gowns = state.selections.gownSelections || { master: 0, doctor: 0, yellow: 0, silver: 0, pink: 0 };
     state.selections.gownSelections = gowns;
     const gownRows = [
-      ["yellow", "黄色领硕士服", inventory.yellow],
-      ["silver", "银色领硕士服", inventory.silver],
-      ["pink", "粉色领硕士服", inventory.pink],
+      ["master", "蓝色硕士服", inventory.master],
       ["doctor", "红色博士服", inventory.doctor],
     ];
+    const collarRows = [
+      ["yellow", "黄色领", inventory.yellow],
+      ["silver", "银色领", inventory.silver],
+      ["pink", "粉色领", inventory.pink],
+    ];
+    const selectorRows = (rows, unit, dataAttribute) => rows.map(([key, label, max]) => `
+      <div class="gown-row">
+        <div><strong>${label}</strong><span>最多 ${max} ${unit}</span></div>
+        <div class="stepper compact" ${dataAttribute}="${key}">
+          <button type="button" aria-label="减少${label}" data-direction="minus">−</button>
+          <input type="number" min="0" max="${max}" inputmode="numeric" value="${Number(gowns[key]) || 0}" aria-label="${label}数量" />
+          <button type="button" aria-label="增加${label}" data-direction="plus">＋</button>
+        </div>
+      </div>
+    `).join("");
 
     elements.custom.hidden = false;
     elements.custom.innerHTML = `
       <div class="inventory-note">
-        <strong>当前可选库存</strong>
-        <span>蓝色硕士服 6 套 · 红色博士服 2 套</span>
+        <strong>选择毕业服</strong>
+        <span>硕士服与博士服可以混合</span>
       </div>
-      <div class="gown-selector">
-        ${gownRows.map(([key, label, max]) => `
-          <div class="gown-row">
-            <div><strong>${label}</strong><span>最多 ${max} 套</span></div>
-            <div class="stepper compact" data-gown-stepper="${key}">
-              <button type="button" aria-label="减少${label}" data-direction="minus">−</button>
-              <input type="number" min="0" max="${max}" inputmode="numeric" value="${Number(gowns[key]) || 0}" aria-label="${label}数量" />
-              <button type="button" aria-label="增加${label}" data-direction="plus">＋</button>
-            </div>
-          </div>
-        `).join("")}
+      <div class="gown-selector">${selectorRows(gownRows, "套", "data-gown-stepper")}</div>
+      <div class="inventory-note collar-heading">
+        <strong>选择通用领子</strong>
+        <span>两种毕业服都可以搭配</span>
       </div>
-      <p id="gownRule">可以混合选择，合计最多不超过 ${people} 人；硕士服总数最多 6 套。</p>
+      <div class="gown-selector">${selectorRows(collarRows, "条", "data-collar-stepper")}</div>
+      <p id="gownRule">毕业服合计最多不超过 ${people} 人；领子总数不能超过已选毕业服。</p>
     `;
+
+    const syncRule = () => {
+      const gownTotal = gownRows.reduce((sum, [key]) => sum + (Number(gowns[key]) || 0), 0);
+      let remaining = gownTotal;
+      collarRows.forEach(([key]) => {
+        gowns[key] = Math.min(Number(gowns[key]) || 0, remaining);
+        remaining -= gowns[key];
+        elements.custom.querySelector(`[data-collar-stepper='${key}'] input`).value = gowns[key];
+      });
+      const collarTotal = collarRows.reduce((sum, [key]) => sum + (Number(gowns[key]) || 0), 0);
+      document.getElementById("gownRule").textContent = `已选毕业服 ${gownTotal} / ${people} 套，领子 ${collarTotal} / ${gownTotal} 条；清洗费 ${gownTotal * PRICING.gownCleaning} RMB。`;
+    };
 
     const clampGowns = (changedKey, requestedValue) => {
       const currentOtherTotal = gownRows.reduce((sum, [key]) => sum + (key === changedKey ? 0 : Number(gowns[key]) || 0), 0);
-      const currentOtherMasters = ["yellow", "silver", "pink"].reduce((sum, key) => sum + (key === changedKey ? 0 : Number(gowns[key]) || 0), 0);
-      let allowed = Math.min(inventory[changedKey], people - currentOtherTotal);
-      if (changedKey !== "doctor") allowed = Math.min(allowed, inventory.masterTotal - currentOtherMasters);
+      const allowed = Math.min(inventory[changedKey], people - currentOtherTotal);
       gowns[changedKey] = Math.max(0, Math.min(Math.floor(requestedValue || 0), allowed));
       elements.custom.querySelector(`[data-gown-stepper='${changedKey}'] input`).value = gowns[changedKey];
-      const total = gownRows.reduce((sum, [key]) => sum + (Number(gowns[key]) || 0), 0);
-      document.getElementById("gownRule").textContent = `已选 ${total} / ${people} 套；清洗费 ${total * PRICING.gownCleaning} RMB。`;
+      syncRule();
     };
 
     elements.custom.querySelectorAll("[data-gown-stepper]").forEach((stepper) => {
@@ -402,7 +418,22 @@
       stepper.querySelector("[data-direction='plus']").addEventListener("click", () => clampGowns(key, Number(input.value) + 1));
       input.addEventListener("input", () => clampGowns(key, Number(input.value)));
     });
-    clampGowns("yellow", Number(gowns.yellow) || 0);
+    elements.custom.querySelectorAll("[data-collar-stepper]").forEach((stepper) => {
+      const key = stepper.dataset.collarStepper;
+      const input = stepper.querySelector("input");
+      const clampCollar = (requestedValue) => {
+        const gownTotal = gownRows.reduce((sum, [gownKey]) => sum + (Number(gowns[gownKey]) || 0), 0);
+        const otherCollars = collarRows.reduce((sum, [collarKey]) => sum + (collarKey === key ? 0 : Number(gowns[collarKey]) || 0), 0);
+        const allowed = Math.min(inventory[key], gownTotal - otherCollars);
+        gowns[key] = Math.max(0, Math.min(Math.floor(requestedValue || 0), allowed));
+        input.value = gowns[key];
+        syncRule();
+      };
+      stepper.querySelector("[data-direction='minus']").addEventListener("click", () => clampCollar(Number(input.value) - 1));
+      stepper.querySelector("[data-direction='plus']").addEventListener("click", () => clampCollar(Number(input.value) + 1));
+      input.addEventListener("input", () => clampCollar(Number(input.value)));
+    });
+    syncRule();
 
     elements.continue.hidden = false;
     elements.continue.textContent = "生成报价";
@@ -456,13 +487,14 @@
       : "";
     const gowns = state.selections.gownSelections || {};
     const gownDetails = [
-      ["黄色领硕士服", gowns.yellow],
-      ["银色领硕士服", gowns.silver],
-      ["粉色领硕士服", gowns.pink],
+      ["蓝色硕士服", gowns.master],
       ["红色博士服", gowns.doctor],
     ].filter(([, count]) => Number(count) > 0).map(([label, count]) => `${label} × ${count}`).join("、");
+    const collarDetails = [
+      ["黄色领", gowns.yellow], ["银色领", gowns.silver], ["粉色领", gowns.pink],
+    ].filter(([, count]) => Number(count) > 0).map(([label, count]) => `${label} × ${count}`).join("、");
     const gownRow = state.selections.type === "graduation"
-      ? `<div class="summary-row"><span>毕业服</span><strong>${gownDetails || "不需要"}</strong></div>`
+      ? `<div class="summary-row"><span>毕业服</span><strong>${gownDetails || "不需要"}</strong></div>${collarDetails ? `<div class="summary-row"><span>通用领子</span><strong>${collarDetails}</strong></div>` : ""}`
       : "";
     const feeDetail = quote.gownFee
       ? `<div class="summary-row"><span>毕业服清洗费</span><strong>${quote.gownFee} RMB</strong></div>`
