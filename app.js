@@ -319,24 +319,38 @@
     const update = () => {
       const indoorInput = elements.custom.querySelector("[data-mixed-duration='indoor']");
       const outdoorInput = elements.custom.querySelector("[data-mixed-duration='outdoor']");
-      let indoorValue = Math.max(1, Number(indoorInput.value) || 1);
-      let outdoorValue = Math.max(1, Number(outdoorInput.value) || 1);
-      if (indoorValue + outdoorValue > 12) {
-        if (document.activeElement === indoorInput) indoorValue = 12 - outdoorValue;
-        else outdoorValue = 12 - indoorValue;
+      const rule = document.getElementById("durationRule");
+      if (indoorInput.value === "" || outdoorInput.value === "") {
+        elements.continue.disabled = true;
+        rule.textContent = "请分别填写室内和室外拍摄时长。";
+        return;
       }
-      indoorInput.value = String(indoorValue);
-      outdoorInput.value = String(outdoorValue);
+      const indoorValue = Number(indoorInput.value);
+      const outdoorValue = Number(outdoorInput.value);
+      if (indoorValue < 1 || outdoorValue < 1 || indoorValue > 11 || outdoorValue > 11) {
+        elements.continue.disabled = true;
+        rule.textContent = "每段拍摄时长需填写 1–11 小时。";
+        return;
+      }
+      if (indoorValue + outdoorValue > 12) {
+        elements.continue.disabled = true;
+        rule.textContent = "室内与室外合计不能超过 12 小时。";
+        return;
+      }
       state.selections.indoorDuration = indoorValue;
       state.selections.outdoorDuration = outdoorValue;
-      document.getElementById("durationRule").textContent =
+      elements.continue.disabled = false;
+      rule.textContent =
         `合计 ${formatHours(indoorValue + outdoorValue)} 小时；单段超过 1 小时但不足 2 小时，按 2 小时计费。`;
     };
     elements.custom.querySelectorAll("[data-mixed-duration]").forEach((input) => input.addEventListener("input", update));
     update();
     elements.continue.hidden = false;
     elements.continue.textContent = "生成报价";
-    elements.continue.onclick = () => advanceSoon();
+    elements.continue.onclick = () => {
+      update();
+      if (!elements.continue.disabled) advanceSoon();
+    };
   }
 
   function updateDurationRule(value) {
