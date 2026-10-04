@@ -90,6 +90,7 @@
       options: [
         { value: "indoor", label: "室内", meta: `单人 ${PRICING.indoorBase} RMB / 小时` },
         { value: "outdoor", label: "室外", meta: `单人 ${PRICING.outdoorBase} RMB / 小时` },
+        { value: "mixed", label: "室内＋室外", meta: "分别填写两段拍摄时长" },
       ],
     },
     people: {
@@ -120,13 +121,9 @@
     gown: {
       kicker: "仅毕业照显示此项",
       heading: "需要毕业服吗？",
-      hint: `服装本身免费，仅收 ${PRICING.gownCleaning} RMB / 套清洗费。`,
+      hint: `可混合选择，系统会按人数和现有库存限制数量；仅收 ${PRICING.gownCleaning} RMB / 套清洗费。`,
       summary: "选择毕业服",
-      options: [
-        { value: "none", label: "不需要", meta: "自备服装或便服拍摄" },
-        { value: "master", label: "硕士服", meta: "黄色 / 粉色 / 银色领" },
-        { value: "doctor", label: "博士服", meta: "包含博士帽" },
-      ],
+      options: [],
     },
   };
 
@@ -189,10 +186,9 @@
     });
 
     if (step === "people" && state.selections.peopleMode === "more") renderPeopleControl();
-    if (step === "duration" && state.selections.durationMode === "custom") renderDurationControl();
-    if (step === "gown" && state.selections.gownType && state.selections.gownType !== "none") {
-      renderGownControl();
-    }
+    if (step === "duration" && state.selections.scene === "mixed") renderMixedDurationControl();
+    else if (step === "duration" && state.selections.durationMode === "custom") renderDurationControl();
+    if (step === "gown") renderGownControl();
   }
 
   function selectVisualOption(value) {
@@ -222,6 +218,10 @@
     }
     if (step === "scene") {
       state.selections.scene = option.value;
+      if (option.value === "mixed") {
+        state.selections.indoorDuration = Number(state.selections.indoorDuration) || 1;
+        state.selections.outdoorDuration = Number(state.selections.outdoorDuration) || 1;
+      }
       advanceSoon();
       return;
     }
@@ -246,21 +246,6 @@
         advanceSoon();
       }
       return;
-    }
-    if (step === "gown") {
-      state.selections.gownType = option.value;
-      if (option.value === "none") {
-        state.selections.gownCount = 0;
-        delete state.selections.collar;
-        advanceSoon();
-      } else {
-        state.selections.gownCount = Math.min(
-          Number(state.selections.people) || 1,
-          Math.max(1, Number(state.selections.gownCount) || 1),
-        );
-        if (option.value !== "master") delete state.selections.collar;
-        renderGownControl();
-      }
     }
   }
 
@@ -315,6 +300,45 @@
     elements.continue.onclick = () => advanceSoon();
   }
 
+  function renderMixedDurationControl() {
+    elements.options.innerHTML = "";
+    const indoor = Number(state.selections.indoorDuration) || 1;
+    const outdoor = Number(state.selections.outdoorDuration) || 1;
+    elements.custom.hidden = false;
+    elements.custom.innerHTML = `
+      <div class="mixed-duration-grid">
+        <label>室内拍摄时长
+          <input class="duration-input" data-mixed-duration="indoor" type="number" min="1" max="11" step="0.5" inputmode="decimal" value="${indoor}" />
+        </label>
+        <label>室外拍摄时长
+          <input class="duration-input" data-mixed-duration="outdoor" type="number" min="1" max="11" step="0.5" inputmode="decimal" value="${outdoor}" />
+        </label>
+      </div>
+      <p id="durationRule">室内与室外分别按对应价格计算，总时长最多 12 小时。</p>
+    `;
+    const update = () => {
+      const indoorInput = elements.custom.querySelector("[data-mixed-duration='indoor']");
+      const outdoorInput = elements.custom.querySelector("[data-mixed-duration='outdoor']");
+      let indoorValue = Math.max(1, Number(indoorInput.value) || 1);
+      let outdoorValue = Math.max(1, Number(outdoorInput.value) || 1);
+      if (indoorValue + outdoorValue > 12) {
+        if (document.activeElement === indoorInput) indoorValue = 12 - outdoorValue;
+        else outdoorValue = 12 - indoorValue;
+      }
+      indoorInput.value = String(indoorValue);
+      outdoorInput.value = String(outdoorValue);
+      state.selections.indoorDuration = indoorValue;
+      state.selections.outdoorDuration = outdoorValue;
+      document.getElementById("durationRule").textContent =
+        `合计 ${formatHours(indoorValue + outdoorValue)} 小时；单段超过 1 小时但不足 2 小时，按 2 小时计费。`;
+    };
+    elements.custom.querySelectorAll("[data-mixed-duration]").forEach((input) => input.addEventListener("input", update));
+    update();
+    elements.continue.hidden = false;
+    elements.continue.textContent = "生成报价";
+    elements.continue.onclick = () => advanceSoon();
+  }
+
   function updateDurationRule(value) {
     const rule = document.getElementById("durationRule");
     if (!rule) return;
@@ -329,53 +353,60 @@
 
   function renderGownControl() {
     const people = Number(state.selections.people) || 1;
-    const collarMarkup = state.selections.gownType === "master"
-      ? `<fieldset class="collar-fieldset">
-          <legend>选择硕士服领色</legend>
-          <div class="collar-options">
-            ${["黄色", "粉色", "银色"].map((color) => `
-              <button type="button" class="chip ${state.selections.collar === color ? "is-selected" : ""}" data-collar="${color}" aria-pressed="${state.selections.collar === color}">${color}</button>
-            `).join("")}
-          </div>
-        </fieldset>`
-      : "";
+    const inventory = PRICING.gownInventory;
+    const gowns = state.selections.gownSelections || { yellow: 0, silver: 0, pink: 0, doctor: 0 };
+    state.selections.gownSelections = gowns;
+    const gownRows = [
+      ["yellow", "黄色领硕士服", inventory.yellow],
+      ["silver", "银色领硕士服", inventory.silver],
+      ["pink", "粉色领硕士服", inventory.pink],
+      ["doctor", "红色博士服", inventory.doctor],
+    ];
 
     elements.custom.hidden = false;
     elements.custom.innerHTML = `
-      ${collarMarkup}
-      <label for="gownCountInput">需要几套毕业服？</label>
-      <div class="stepper">
-        <button type="button" aria-label="减少毕业服数量" data-stepper="minus">−</button>
-        <input id="gownCountInput" type="number" min="1" max="${people}" inputmode="numeric" value="${state.selections.gownCount}" />
-        <button type="button" aria-label="增加毕业服数量" data-stepper="plus">＋</button>
+      <div class="inventory-note">
+        <strong>当前可选库存</strong>
+        <span>蓝色硕士服 6 套 · 红色博士服 2 套</span>
       </div>
-      <p>${PRICING.gownCleaning} RMB / 套清洗费，最多不超过拍摄人数。</p>
+      <div class="gown-selector">
+        ${gownRows.map(([key, label, max]) => `
+          <div class="gown-row">
+            <div><strong>${label}</strong><span>最多 ${max} 套</span></div>
+            <div class="stepper compact" data-gown-stepper="${key}">
+              <button type="button" aria-label="减少${label}" data-direction="minus">−</button>
+              <input type="number" min="0" max="${max}" inputmode="numeric" value="${Number(gowns[key]) || 0}" aria-label="${label}数量" />
+              <button type="button" aria-label="增加${label}" data-direction="plus">＋</button>
+            </div>
+          </div>
+        `).join("")}
+      </div>
+      <p id="gownRule">可以混合选择，合计最多不超过 ${people} 人；硕士服总数最多 6 套。</p>
     `;
 
-    const input = elements.custom.querySelector("input");
-    bindStepper(input, 1, people, 1, (value) => {
-      state.selections.gownCount = value;
-    });
+    const clampGowns = (changedKey, requestedValue) => {
+      const currentOtherTotal = gownRows.reduce((sum, [key]) => sum + (key === changedKey ? 0 : Number(gowns[key]) || 0), 0);
+      const currentOtherMasters = ["yellow", "silver", "pink"].reduce((sum, key) => sum + (key === changedKey ? 0 : Number(gowns[key]) || 0), 0);
+      let allowed = Math.min(inventory[changedKey], people - currentOtherTotal);
+      if (changedKey !== "doctor") allowed = Math.min(allowed, inventory.masterTotal - currentOtherMasters);
+      gowns[changedKey] = Math.max(0, Math.min(Math.floor(requestedValue || 0), allowed));
+      elements.custom.querySelector(`[data-gown-stepper='${changedKey}'] input`).value = gowns[changedKey];
+      const total = gownRows.reduce((sum, [key]) => sum + (Number(gowns[key]) || 0), 0);
+      document.getElementById("gownRule").textContent = `已选 ${total} / ${people} 套；清洗费 ${total * PRICING.gownCleaning} RMB。`;
+    };
 
-    elements.custom.querySelectorAll("[data-collar]").forEach((button) => {
-      button.addEventListener("click", () => {
-        state.selections.collar = button.dataset.collar;
-        elements.custom.querySelectorAll("[data-collar]").forEach((chip) => {
-          const selected = chip === button;
-          chip.classList.toggle("is-selected", selected);
-          chip.setAttribute("aria-pressed", String(selected));
-        });
-      });
+    elements.custom.querySelectorAll("[data-gown-stepper]").forEach((stepper) => {
+      const key = stepper.dataset.gownStepper;
+      const input = stepper.querySelector("input");
+      stepper.querySelector("[data-direction='minus']").addEventListener("click", () => clampGowns(key, Number(input.value) - 1));
+      stepper.querySelector("[data-direction='plus']").addEventListener("click", () => clampGowns(key, Number(input.value) + 1));
+      input.addEventListener("input", () => clampGowns(key, Number(input.value)));
     });
+    clampGowns("yellow", Number(gowns.yellow) || 0);
 
     elements.continue.hidden = false;
     elements.continue.textContent = "生成报价";
-    elements.continue.onclick = () => {
-      if (state.selections.gownType === "master" && !state.selections.collar) {
-        state.selections.collar = "黄色";
-      }
-      advanceSoon();
-    };
+    elements.continue.onclick = () => advanceSoon();
   }
 
   function bindStepper(input, min, max, step, onChange) {
@@ -413,17 +444,25 @@
       scene: state.selections.scene,
       people: state.selections.people,
       duration: state.selections.duration,
+      indoorDuration: state.selections.indoorDuration,
+      outdoorDuration: state.selections.outdoorDuration,
       graduation: state.selections.type === "graduation",
-      gownType: state.selections.gownType,
-      gownCount: state.selections.gownCount,
+      gownSelections: state.selections.gownSelections,
     });
-    const sceneLabel = state.selections.scene === "indoor" ? "室内" : "室外";
+    const sceneLabels = { indoor: "室内", outdoor: "室外", mixed: "室内＋室外" };
+    const sceneLabel = sceneLabels[state.selections.scene] || "室外";
     const adjustedTime = quote.duration !== quote.billableHours
       ? `<p class="billing-note">实际 ${formatHours(quote.duration)} 小时，按 ${formatHours(quote.billableHours)} 小时计费</p>`
       : "";
-    const gownLabels = { none: "不需要", master: "硕士服", doctor: "博士服" };
+    const gowns = state.selections.gownSelections || {};
+    const gownDetails = [
+      ["黄色领硕士服", gowns.yellow],
+      ["银色领硕士服", gowns.silver],
+      ["粉色领硕士服", gowns.pink],
+      ["红色博士服", gowns.doctor],
+    ].filter(([, count]) => Number(count) > 0).map(([label, count]) => `${label} × ${count}`).join("、");
     const gownRow = state.selections.type === "graduation"
-      ? `<div class="summary-row"><span>毕业服</span><strong>${gownLabels[state.selections.gownType || "none"]}${quote.gownCount ? ` × ${quote.gownCount}套` : ""}</strong></div>`
+      ? `<div class="summary-row"><span>毕业服</span><strong>${gownDetails || "不需要"}</strong></div>`
       : "";
     const feeDetail = quote.gownFee
       ? `<div class="summary-row"><span>毕业服清洗费</span><strong>${quote.gownFee} RMB</strong></div>`

@@ -694,6 +694,57 @@ button {
   border-radius: 12px;
 }
 
+.mixed-duration-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.mixed-duration-grid label {
+  display: grid;
+  gap: 8px;
+}
+
+.inventory-note,
+.gown-row {
+  display: flex;
+  align-items: flex-start;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.inventory-note {
+  margin-bottom: 14px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--line);
+}
+
+.inventory-note span,
+.gown-row span {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.gown-selector {
+  display: grid;
+  gap: 14px;
+}
+
+.gown-row > div:first-child {
+  display: grid;
+  gap: 3px;
+}
+
+.stepper.compact {
+  width: 100%;
+  max-width: none;
+  grid-template-columns: 42px 1fr 42px;
+}
+
+.stepper.compact button,
+.stepper.compact input {
+  min-height: 42px;
+}
+
 .collar-fieldset {
   margin: 0 0 18px;
   padding: 0;
@@ -1140,6 +1191,20 @@ button {
 }
 
 @media (min-width: 620px) {
+  .mixed-duration-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .inventory-note,
+  .gown-row {
+    align-items: center;
+    flex-direction: row;
+    justify-content: space-between;
+  }
+
+  .stepper.compact {
+    width: 154px;
+  }
   .section-shell,
   .site-header {
     width: min(100% - 56px, 1120px);
